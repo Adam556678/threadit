@@ -1,0 +1,23 @@
+{
+  "name": "threadit",
+  "version": "1.0.0",
+  "description": "A Reddit clone app using Node.js, Express.js and MongoDB",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adam556678/threadit.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Adam556678/threadit/issues"
+  },
+  "homepage": "https://github.com/Adam556678/threadit#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
