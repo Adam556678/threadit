@@ -6,7 +6,7 @@ const {isValidEmail, isStrongPassword, isvalidPhoneNum} = require("../helpers/va
 
 // User Signup - POST
 router.post("/signup", async (req, res) => {
-    email, password, phoneNumber = req.body;
+    const {email, password, phoneNumber, firstName, lastName, country} = req.body;
     let errors = []
 
     try {
@@ -21,14 +21,31 @@ router.post("/signup", async (req, res) => {
         }
         
         // validate phone Number
-        if (!isvalidPhoneNum){
+        if (phoneNumber && !isvalidPhoneNum(phoneNumber)){
             errors.push("Invalid phone number");
+        }
+
+        // cehck for errors
+        if (errors.length > 0){
+            return res.status(400).json({errors})
         }
 
         // hash the password
         const hashedPassword = await hashPassword(password)
+
+        // create the user
+        await User.create({
+            username: username,
+            email: email,
+            password: hashedPassword,            
+            firstName: firstName,
+            lastName: lastName,
+            phoneNumber: phoneNumber,
+            country: country,        
+        })
+        return res.status(200).json({message: "User created successfully!"});
     } catch (error) {
-        
+        return res.status(500).json({error: "Something went wrong"})
     }
 
 });
