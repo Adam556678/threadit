@@ -3,6 +3,23 @@ const router = express.Router();
 const User = require("../models/User.js");
 const {hashPassword, comparePassword} = require("../helpers/hash.js");
 const {isValidEmail, isStrongPassword, isvalidPhoneNum} = require("../helpers/validators.js");
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// check login middleware
+const authMiddleware = (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({message: "Not logged in"});
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.userId = jwt.decoded.userId;
+        next();
+    } catch (error) {
+        return res.status(401).json({message: "Unathorized"});
+    }
+}
 
 // User Signup - POST
 router.post("/signup", async (req, res) => {
@@ -48,4 +65,31 @@ router.post("/signup", async (req, res) => {
         return res.status(500).json({error: "Something went wrong"})
     }
 
+});
+
+// User login - POST
+router.post("/login", async (req, res) => {
+    const {email, password} = req.body;
+
+    try {
+        const user = await User.findOne({email: email});
+        
+        if (!user){
+            return res.status(401).json({message: "Invalid credentials"});
+        }
+
+        // verify password
+        const isMatch = await comparePassword(password, user.password)
+        if (!isMatch){
+            return res.status(401).json({message: "Invalid credentials"});
+        }
+
+        // create user's jwt
+        const token = jwt.sign({userId: user._id}, JWT_SECRET);
+        res.cookie('token', token, {httpOnly: true});
+
+        res.status(200).json({ message: "Login successful", userId: user._id });
+    } catch (error) {
+        return res.status(500).json({message: "Something went wrong"})
+    }
 });
