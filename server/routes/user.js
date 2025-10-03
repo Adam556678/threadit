@@ -23,7 +23,7 @@ const authMiddleware = (req, res, next) => {
 
 // User Signup - POST
 router.post("/signup", async (req, res) => {
-    const {email, password, phoneNumber, firstName, lastName, country} = req.body;
+    const {email, password,username ,phoneNumber, firstName, lastName, country} = req.body;
     let errors = []
 
     try {
@@ -62,6 +62,7 @@ router.post("/signup", async (req, res) => {
         })
         return res.status(200).json({message: "User created successfully!"});
     } catch (error) {
+        console.log(error);
         return res.status(500).json({error: "Something went wrong"})
     }
 
