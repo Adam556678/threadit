@@ -9,7 +9,6 @@ const PostSchema = new mongoose.Schema({
         ref: "User"
     },
 
-    votes: {type: Number, default: 0},
     comments: [{
         type: mongoose.Schema.Types.ObjectId, 
         ref: "Comment"
@@ -28,6 +27,16 @@ const PostSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: "Community" 
     },
+
+    votes: {
+        count: {type: Number, default: 0},
+        users: [
+            {
+                userId: {type: mongoose.Schema.Types.ObjectId, ref: "User"}, 
+                voteType: {type: String, enum: ["up", "down"], required: true}
+            }
+        ]
+    }
 }, {timestamps: true});
 
 module.exports = mongoose.model("Post", PostSchema);

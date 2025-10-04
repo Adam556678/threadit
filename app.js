@@ -16,7 +16,7 @@ app.use(cookieParser());
 // Routes
 app.use("/users", require("./server/routes/user.js"));
 app.use("/communities", require("./server/routes/community.js"));
-// app.use("/posts", require("./server/routes/post.js"));
+app.use("/posts", require("./server/routes/post.js"));
 
 // Start the app server
 app.listen(PORT, () => {
