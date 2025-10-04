@@ -31,9 +31,16 @@ const CommunitySchema = new mongoose.Schema({
 
     access: {
         type: String,
-        enum: ["Public", "private"],
+        enum: ["Public", "Private"],
         default: "Public"
     },
+
+    joinRequests: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
+    ],
 
     memberCount: {type: Number, default: 1},
 },

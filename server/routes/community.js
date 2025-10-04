@@ -81,7 +81,7 @@ router.post("/:communityId/add-post", auth, joined, async (req, res) => {
 
 });
 
-// get community posts
+// get community posts - GET
 router.get("/:communityId/posts", auth, joined, async (req, res) => {
     try {
         const posts = await Post.find({community: req.community._id});
@@ -90,5 +90,45 @@ router.get("/:communityId/posts", auth, joined, async (req, res) => {
         return res.status(500).json({message: "Something went wrong"});
     }
 });
+
+// join community - POST
+router.post("/:communityId/join", auth, async (req, res) => {
+    try {
+       
+        // get community document
+        const {communityId} = req.params;
+        const community = await Community.findById(communityId);
+
+        // check if user already joined
+        const isMember = community.members.includes(req.userId);
+        if (isMember)
+            return res.status(400).json({message: "User already joined"});
+
+        // check community status
+        if (community.status == "Public"){
+            
+            // add user to the community without request
+            community.members.push(req.userId);
+            community.memberCount += 1;
+            await community.save();
+            return res.status(200).json({message: "Joined community successfully"});
+
+        }else{ // community is Private
+            
+            if (community.joinRequests.includes(req.userId)){
+                return res.status(403).json({message: "You already requested to join"});
+            }else{
+                // make a join request and store it in requests
+                community.joinRequests.push(req.userId);
+                await community.save();
+
+                return res.status(200).json({message: "Join request sent to admins"});
+            }
+        }
+    } catch (error) {
+        
+    }
+
+})
 
 module.exports = router;
