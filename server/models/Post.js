@@ -28,9 +28,6 @@ const PostSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: "Community" 
     },
-
-    createdAt: {type: Date, default: Date.now()},
-    UpdatedAt: {type: Date}
-});
+}, {timestamps: true});
 
 module.exports = mongoose.model("Post", PostSchema);
