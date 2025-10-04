@@ -5,21 +5,7 @@ const {hashPassword, comparePassword} = require("../helpers/hash.js");
 const {isValidEmail, isStrongPassword, isvalidPhoneNum} = require("../helpers/validators.js");
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-// check login middleware
-const authMiddleware = (req, res, next) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({message: "Not logged in"});
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.userId = jwt.decoded.userId;
-        next();
-    } catch (error) {
-        return res.status(401).json({message: "Unathorized"});
-    }
-}
+JWT_SECRET = process.env.JWT_SECRET;
 
 // User Signup - POST
 router.post("/signup", async (req, res) => {
@@ -91,8 +77,15 @@ router.post("/login", async (req, res) => {
 
         res.status(200).json({ message: "Login successful", userId: user._id });
     } catch (error) {
+        console.log(error);
         return res.status(500).json({message: "Something went wrong"})
     }
+});
+
+// Logout - GET
+router.get('/logout', (req, res) => {
+    res.clearCookie("token");
+    res.json({message: "Logout Successful."});
 });
 
 module.exports = router;
