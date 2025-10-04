@@ -43,7 +43,7 @@ router.post("/", auth, async(req, res) => {
 });
 
 // get all communities
-router.post("/", auth, async(req, res) => {
+router.get("/", auth, async(req, res) => {
     try {
         const communities = await Community.find();
         return res.status(200).json({communities})
@@ -79,6 +79,16 @@ router.post("/:communityId/add-post", auth, joined, async (req, res) => {
         return res.status(500).json({message: "Something went wrong"});
     }
 
+});
+
+// get community posts
+router.get("/:communityId/posts", auth, joined, async (req, res) => {
+    try {
+        const posts = await Post.find({community: req.community._id});
+        return res.status(200).json({posts}); 
+    } catch (error) {
+        return res.status(500).json({message: "Something went wrong"});
+    }
 });
 
 module.exports = router;
