@@ -42,6 +42,18 @@ router.post("/", auth, async(req, res) => {
     }
 });
 
+// get all communities
+router.post("/", auth, async(req, res) => {
+    try {
+        const communities = await Community.find();
+        return res.status(200).json({communities})
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message: "Something went wrong"});
+    }
+});
+
+
 // Add post to a specific community 
 router.post("/:communityId/add-post", auth, joined, async (req, res) => {
     const {communityId} = req.params;
