@@ -105,7 +105,7 @@ router.post("/:communityId/join", auth, async (req, res) => {
             return res.status(400).json({message: "User already joined"});
 
         // check community status
-        if (community.status == "Public"){
+        if (community.access == "Public"){
             
             // add user to the community without request
             community.members.push(req.userId);
@@ -126,9 +126,18 @@ router.post("/:communityId/join", auth, async (req, res) => {
             }
         }
     } catch (error) {
-        
+        console.log(error);
+        return res.status(500).json({message: "Something went wrong"});
     }
 
-})
+});
+
+// clear requests
+// router.post("/:communityId/clear-req", async (req, res) => {
+//     const community = await Community.findById(req.params.communityId);
+//     community.joinRequests = [];
+//     await community.save();
+//     res.status(200).json("Removed");
+// });
 
 module.exports = router;
