@@ -132,6 +132,7 @@ router.post("/:communityId/join", auth, async (req, res) => {
 
 });
 
+
 // clear requests
 // router.post("/:communityId/clear-req", async (req, res) => {
 //     const community = await Community.findById(req.params.communityId);
