@@ -6,3 +6,5 @@ const VoteSchema = new mongoose.Schema({
     targetType: {type: String, enum: ["Post", "Comment"], required: true},
     voteType: {type: String, enum: ["up", "down"], required: true}
 }, {timestamps: true});
+
+module.exports = mongoose.model("Vote", VoteSchema);

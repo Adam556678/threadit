@@ -27,6 +27,13 @@ const PostSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: "Community" 
     },
+
+    // Votes and vote counts
+    voteCount: {type: Number, default: 0},
+    votes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Vote"
+    }]
 }, {timestamps: true});
 
 module.exports = mongoose.model("Post", PostSchema);
