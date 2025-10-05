@@ -30,22 +30,28 @@ router.post("/:postId/vote", auth, postMiddleware, async (req, res) => {
         
         // user voted before
         if (existingVote){
-            // case 1: same vote type again (ignore)
-            if (existingVote.voteType == type)
-                return res.status(200).json({message: "Vote already recorded"});
+            // case 1: same vote type again - remove vote
+            if (existingVote.voteType == type){
+                // remove user's vote
+                if (type == "up") post.votes.count -= 1;
+                else post.votes.count += 1;
 
-            // case 2: user switched vote
-            if (existingVote.voteType == "up" && type == "down"){
-                post.votes.count -= 2;
-            }else if (existingVote.voteType == "down" && type == "up"){
-                post.votes.count += 2;
-            }
+                // remove user from votes.users
+                post.votes.users = post.votes.users.filter(u => !u.userId.equals(req.userId));
+                await post.save();
+                return res.status(200).json({message: "Vote removed"});
 
-            // update the vote type
-            existingVote.voteType = type;
+            }else{
+                // case 2: user switched vote
+                if (type == "up") post.votes.count += 2;
+                else post.votes.count -= 2; 
 
-        // user didn't vote before
+                // update the vote type
+                existingVote.voteType = type;
+            }   
+                
         }else{
+            // case 3: first time voting
             if (type == "up") post.votes.count += 1;
             else post.votes.count -= 1;
 
