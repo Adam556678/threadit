@@ -14,4 +14,15 @@ router.get("/:postId", auth, postMiddleware, async (req, res) => {
     }
 });
 
+// Get post's comments - GET
+router.get("/:postId/comments", auth, postMiddleware, async (req, res) => {
+    try {
+        const comments = await req.post.comments.find();
+        return res.status(200).json({comments});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message: "Something went wrong"});
+    }
+});
+
 module.exports = router;
