@@ -6,10 +6,11 @@ const verifyCommunityMember = async (req, res, next) => {
     const { targetId, targetType } = req.body; 
 
     let community;
+    let post;
 
     if (targetType === "Post") {
       // Find post and its community
-      const post = await Post.findById(targetId).populate("community");
+      post = await Post.findById(targetId).populate("community");
       if (!post || !post.community)
         return res.status(404).json({ message: "Post or community not found" });
 
@@ -17,7 +18,7 @@ const verifyCommunityMember = async (req, res, next) => {
     } 
     else if (targetType === "Comment") {
       // Find comment, then find post containing it, then community
-      const post = await Post.findOne({ comments: targetId }).populate("community");
+      post = await Post.findOne({ comments: targetId }).populate("community");
       if (!post || !post.community)
         return res.status(404).json({ message: "Post or community not found" });
 
@@ -32,7 +33,7 @@ const verifyCommunityMember = async (req, res, next) => {
     if (!isMember)
       return res.status(403).json({ message: "You are not a member of this community" });
 
-    req.community = community;
+    req.post = post;
     next();
 
   } catch (error) {
