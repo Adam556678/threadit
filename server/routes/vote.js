@@ -5,6 +5,7 @@ const verifyCommunityMember = require("../middlewares/verify_member.js");
 const Vote = require("../models/Vote.js");
 const Post = require("../models/Post.js");
 const Comment = require("../models/Comment.js");
+const User = require("../models/User.js");
 
 
 /*
@@ -34,6 +35,9 @@ router.post("/vote", auth, verifyCommunityMember, async (req, res) => {
         const targetDoc = await TargetModel.findById(targetId);
         if (!targetDoc) return res.status(404).json({meassage: `${targetType} not found`});
 
+        // get the document author
+        const docAuthor = await User.findById(targetDoc.author);
+
         // ---- Case 1 : User hasn't voted yet ---
         if (!existingVote){
             // create vote document and adding it to the votes list
@@ -46,8 +50,14 @@ router.post("/vote", auth, verifyCommunityMember, async (req, res) => {
             targetDoc.votes.push(vote._id);
 
             // update vote counts of the target
-            targetDoc.voteCount += voteType === "up" ? 1 : -1;
+            const newVoteCount = voteType === "up" ? 1 : -1;
+            targetDoc.voteCount += newVoteCount;
             await targetDoc.save();
+
+            // update author karma
+            docAuthor.karma += newVoteCount;
+            await docAuthor.save();
+            
             return res.status(200).json({message: "Vote recorded"});
         }
         
@@ -56,9 +66,15 @@ router.post("/vote", auth, verifyCommunityMember, async (req, res) => {
             // remove vote from the target, delete the vote document and update vote count
             targetDoc.votes.pull(existingVote._id);
             await existingVote.deleteOne();
-            targetDoc.voteCount += voteType === "up" ? -1 : 1;
             
+            const newVoteCount = voteType === "up" ? -1 : 1;
+            targetDoc.voteCount += newVoteCount;
             await targetDoc.save();
+
+            // update author karma
+            docAuthor.karma += newVoteCount;
+            await docAuthor.save();
+            
             return res.status(200).json({message: "Vote removed"});
         }
         
@@ -67,9 +83,14 @@ router.post("/vote", auth, verifyCommunityMember, async (req, res) => {
             existingVote.voteType = voteType;
             await existingVote.save();
             
-            targetDoc.voteCount += voteType === "up" ? 2 : -2;
+            const newVoteCount = voteType === "up" ? 2 : -2;
+            targetDoc.voteCount += newVoteCount;
             await targetDoc.save();
             
+            // update author karma
+            docAuthor.karma += newVoteCount;
+            await docAuthor.save();
+
             return res.status(200).json({message: "Vote recorded"});
         }
 
@@ -79,3 +100,5 @@ router.post("/vote", auth, verifyCommunityMember, async (req, res) => {
                 
     }
 })
+
+module.exports = router;
