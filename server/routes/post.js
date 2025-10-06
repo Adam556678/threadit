@@ -28,7 +28,7 @@ router.get("/:postId/comments", auth, postMiddleware, async (req, res) => {
 
 /*
 Add comment route - POST
-params:
+params
     - postId
 body:
     - text

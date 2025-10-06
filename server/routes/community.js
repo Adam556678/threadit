@@ -132,6 +132,39 @@ router.post("/:communityId/join", auth, async (req, res) => {
 
 });
 
+/* 
+Update post - PATCH
+params:
+    - postId
+body:
+    - title
+    - body
+ */
+router.patch("/:communityId/:postId", auth, joined, async (req, res) => {
+    try {
+        const {postId} = req.params
+        const {title, body} = req.body
+    
+        // get post document
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({message: "Post not found"});
+    
+        // verify if user is the author
+        if (post.author != req.userId)
+            return res.status(403).json({message: "You can only edit your own posts"});
+
+        // update post and save
+        if (title) post.title = title;
+        if (body) post.body = body;
+
+        await post.save()
+        return res.status(200).json({message: "Post updated successfully"});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message: "Something went wrong"});
+    }
+
+});
 
 // clear requests
 // router.post("/:communityId/clear-req", async (req, res) => {
