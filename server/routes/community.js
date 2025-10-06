@@ -5,6 +5,8 @@ const Community = require("../models/Community.js");
 const User = require("../models/User");
 const joined = require("../middlewares/joined.js");
 const Post = require("../models/Post.js");
+const verifyCommunityOwner = require("../middlewares/verify_community_owner.js");
+const Comment = require("../models/Comment.js");
 
 // Create community - POST
 router.post("/", auth, async(req, res) => {
@@ -166,12 +168,61 @@ router.patch("/:communityId/:postId", auth, joined, async (req, res) => {
 
 });
 
-// clear requests
-// router.post("/:communityId/clear-req", async (req, res) => {
-//     const community = await Community.findById(req.params.communityId);
-//     community.joinRequests = [];
-//     await community.save();
-//     res.status(200).json("Removed");
-// });
+/* 
+Delete post - DELETE
+params:
+    - postId
+body:
+ */
+router.delete("/:communityId/:postId", auth, joined, async (req, res) => {
+    try {
+        const {postId} = req.params
+    
+        // get post document
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({message: "Post not found"});
+        
+        // verify if user is the author or an admin
+        const isAdmin = await req.community.admins.some(id => id.equals(req.userId));
+        if (post.author != req.userId && !isAdmin)
+            return res.status(403).json({message: "You can only delete your own posts"});
+
+        // delete post 
+        req.community.posts.pull(postId);
+        await post.deleteOne();
+        await req.community.save();
+        return res.status(200).json({message: "Post deleted successfully"});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message: "Something went wrong"});
+    }
+
+});
+
+/*
+Delete community - DELETE
+params:
+    - communityId
+body:
+*/
+router.delete("/:communityId", auth, verifyCommunityOwner, async (req, res) => {
+    try {
+        const community = req.community;
+
+        // delete community's posts & votes
+        for (const postId of community.posts){
+            await Comment.deleteMany({postId});
+            await Vote.deleteMany({targetId: postId, targetType: "Post"})
+            await Post.findByIdAndDelete(postId);
+        }
+
+        // delete community and save
+        await req.community.deleteOne();
+        return res.status(200).json({message: "Community deleted"});
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message: "Something went wrong"});
+    }
+});
 
 module.exports = router;
