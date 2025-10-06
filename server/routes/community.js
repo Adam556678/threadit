@@ -7,6 +7,7 @@ const joined = require("../middlewares/joined.js");
 const Post = require("../models/Post.js");
 const verifyCommunityOwner = require("../middlewares/verify_community_owner.js");
 const Comment = require("../models/Comment.js");
+const Vote = require("../models/Vote.js");
 
 // Create community - POST
 router.post("/", auth, async(req, res) => {
@@ -187,10 +188,20 @@ router.delete("/:communityId/:postId", auth, joined, async (req, res) => {
         if (post.author != req.userId && !isAdmin)
             return res.status(403).json({message: "You can only delete your own posts"});
 
-        // delete post 
+        // delete post from the community post's list 
         req.community.posts.pull(postId);
-        await post.deleteOne();
         await req.community.save();
+
+        // delete votes of this post
+        await Vote.deleteMany({targetId: postId});
+
+        // delete comments and comment's votes of this post
+        const commentIds = await Comment.find({postId}).distinct("_id"); 
+        await Vote.deleteMany({targetId: {$in: commentIds}, targetType: "Comment"});
+        await Comment.deleteMany({postId});        
+
+        await post.deleteOne();
+
         return res.status(200).json({message: "Post deleted successfully"});
     } catch (error) {
         console.log(error);
@@ -211,8 +222,18 @@ router.delete("/:communityId", auth, verifyCommunityOwner, async (req, res) => {
 
         // delete community's posts & votes
         for (const postId of community.posts){
+            
+            // delete votes related to this post (and comments) 
+            const commentIds =await Comment.find({postId}).distinct("_id"); 
+            await Vote.deleteMany({
+                $or: [
+                    {targetId: postId, targetType: "Post"},
+                    {targetId: {$in: commentIds}, targetType: "Comment"}
+                ]
+            });
+            
+            // Delete post's comment and the post
             await Comment.deleteMany({postId});
-            await Vote.deleteMany({targetId: postId, targetType: "Post"})
             await Post.findByIdAndDelete(postId);
         }
 
