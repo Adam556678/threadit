@@ -4,55 +4,13 @@ const User = require("../models/User.js");
 const {hashPassword, comparePassword} = require("../helpers/hash.js");
 const {isValidEmail, isStrongPassword, isvalidPhoneNum} = require("../helpers/validators.js");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 
 const bcrypt = require("bcrypt");
 const UserOTP = require("../models/UserOTP.js");
+const sendVerificationOTP = require("../helpers/otp_verification.js");
 
 JWT_SECRET = process.env.JWT_SECRET;
 
-// Nodemailer
-const transporter =  nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.BREVO_EMAIL,
-    pass: process.env.BREVO_SMTP_KEY,
-  },
-});
-
-// Function for sending an otp mail to the new users
-const sendVerificationOTP = async ({_id, email}, res) => {
-    try {
-        // generate an OTP
-        const otp = `${Math.floor(1000 + Math.random() * 9000)}`
-
-        // mail options
-        const mailOptions = {
-            from: process.env.BREVO_EMAIL,
-            to: email,
-            subject: "Verify your Email",
-            html: `<p>Your verification code is <b>${otp}</b>. </p>
-            <p>This code expires in <b>1 hour</b></p>`
-        }
-
-        // hash the OTP and create its document
-        const hashedOTP = await bcrypt.hash(otp, 10);
-        await UserOTP.create({
-            userId: _id,
-            otp: hashedOTP,
-            ExpiresAt: Date.now() + 3600000
-        })
-
-        // send mail to the user
-        await transporter.sendMail(mailOptions);
-    } catch (error) {
-        return res.status(500).json({
-            message: "An error occured while trying to send a verification code",
-        });
-    }
-}
 
 // User Signup - POST
 router.post("/signup", async (req, res) => {
@@ -89,7 +47,7 @@ router.post("/signup", async (req, res) => {
         const hashedPassword = await hashPassword(password)
 
         // create the user
-        const user = await User.create({
+        const user = new User({
             username: username,
             email: email,
             password: hashedPassword,            
@@ -100,12 +58,14 @@ router.post("/signup", async (req, res) => {
         })
 
         // send an OTP Verfication code 
-        await sendVerificationOTP(user, res);
+        await sendVerificationOTP(user);
+
+        await user.save();
 
         return res.status(200).json({message: `A verification code sent to ${email}`});
     } catch (error) {
         console.log(error);
-        return res.status(500).json({error: "Something went wrong"});
+        return res.status(500).json({error: error.message || "Something went wrong"});
     }
 
 });
@@ -113,27 +73,26 @@ router.post("/signup", async (req, res) => {
 /*
 Verify user's email
 params:
-    - userId
 body:
+    - email
     - otp
 */
-router.post("/:userId/verify", async (req, res) => {
+router.post("/verify", async (req, res) => {
     try {
-        const {userId} = req.params;
-        const {otp} = req.body;
+        const {email, otp} = req.body;
 
         // get user document
-        const user = await User.findById(userId);
+        const user = await User.findOne({email});
         if (!user)
             return res.status(404).json({message: "User is not found"});
         if (user.verified)
             return res.status(400).json({message: "User is already verified"});
 
         // get user's verification otp stored in DB
-        const queriedOTP = await UserOTP.findOne({userId});
+        const queriedOTP = await UserOTP.findOne({userId: user._id});
         if (queriedOTP.ExpiresAt < Date.now()){
             // delete old otp and send a new one
-            await UserOTP.deleteMany({userId});
+            await UserOTP.deleteMany({userId: user._id});
             await sendVerificationOTP(user, res);
             return res.status(403).json({
                 message: `Verification code is expired. A new one was sent to ${user.email}`
@@ -147,7 +106,7 @@ router.post("/:userId/verify", async (req, res) => {
         
         // change user's verification state and delete OTP document
         user.verified = true;
-        await UserOTP.deleteMany({userId});
+        await UserOTP.deleteMany({userId: user._id});
         await user.save();
 
         return res.status(200).json({message: "User is verified successfully"});
