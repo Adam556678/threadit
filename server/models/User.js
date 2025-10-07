@@ -6,6 +6,8 @@ const UserSchema = new mongoose.Schema({
     password: {type: String, required: true},
     karma: {type: Number, default: 0},
     
+    verified: {type: Boolean, default: false},
+
     // Optional profile info
     firstName: {type: String},
     lastName: {type: String},
