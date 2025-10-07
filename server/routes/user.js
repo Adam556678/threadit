@@ -155,33 +155,26 @@ router.post("/login", async (req, res) => {
 /*
 upload user image - PATCH
 params: 
-    - userId
 body:
     - profilePic
 */
-router.patch("/:userId/upload-pfp", auth, upload.single("profilPic"), async (req, res) => {
+router.patch("/upload-pfp", auth, upload.single("profilePic"), async (req, res) => {
     try {
-        // check for current user id
-        if (req.params.userId != req.userId){
-            return res.status(403).json({
-                message: "You can only update your own profile picture"
-            });
-        }
-        
         const result = await cloudinary.uploader.upload(
             req.file.path, 
             {resource_type: "image"}
         );
         const user = await User.findByIdAndUpdate(
-            req.params.userId, 
-            {profilePic: result.secure_url}
+            req.userId, 
+            {profilePic: result.secure_url},
+            { new: true } 
         );
         return res.status(200).json({message: "User profiled picture updated", user})
     } catch (error) {
         console.log(error);
         return res.status(500).json({message: "Something went wrong"});
     }
-})
+});
 
 // Logout - GET
 router.get('/logout', (req, res) => {
