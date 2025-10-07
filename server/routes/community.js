@@ -9,7 +9,7 @@ const verifyCommunityOwner = require("../middlewares/verify_community_owner.js")
 const Comment = require("../models/Comment.js");
 const Vote = require("../models/Vote.js");
 const upload = require("../middlewares/upload.js");
-const cloudinary = require("../config/cloudinary.js");
+const cloudinary = require("../config/cloudinary.js").v2;
 
 // Create community - POST
 router.post("/", auth, async(req, res) => {
@@ -76,7 +76,7 @@ router.post("/:communityId/add-post", auth, joined, upload.array("media"), async
         const uploadedMedia = [];
 
         for (file of req.files){
-            const result = await cloudinary.UploadStream.upload(
+            const result = await cloudinary.uploader.upload(
                 file.path,
                 {resource_type: file.mimetype.startsWith("video") ? "video" : "image"}
             );
