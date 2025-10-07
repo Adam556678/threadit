@@ -18,7 +18,10 @@ const PostSchema = new mongoose.Schema({
     media: [
         {
         url: { type: String },     
-        type: { type: String }     
+        type: { 
+            type: String, 
+            enum: ["Image", "Video", "Link"]
+        }
         }
     ],
 

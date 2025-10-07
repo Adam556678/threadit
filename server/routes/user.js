@@ -6,8 +6,12 @@ const {isValidEmail, isStrongPassword, isvalidPhoneNum} = require("../helpers/va
 const jwt = require("jsonwebtoken");
 
 const bcrypt = require("bcrypt");
+const auth = require("../middlewares/auth.js");
 const UserOTP = require("../models/UserOTP.js");
 const sendVerificationOTP = require("../helpers/otp_verification.js");
+
+const cloudinary = require("../config/cloudinary.js");
+const upload = require("../middlewares/upload.js");
 
 JWT_SECRET = process.env.JWT_SECRET;
 
@@ -147,6 +151,30 @@ router.post("/login", async (req, res) => {
         return res.status(500).json({message: "Something went wrong"})
     }
 });
+
+/*
+upload user image - PATCH
+params: 
+    - userId
+body:
+    - profilePic
+*/
+router.patch("/:userId/upload-pfp", auth, upload.single("profilPic"), async (req, res) => {
+    try {
+        const result = await cloudinary.uploader.upload(
+            req.file.path, 
+            {resource_type: "image"}
+        );
+        const user = await User.findByIdAndUpdate(
+            req.params.userId, 
+            {profilePic: result.secure_url}
+        );
+        return res.status(200).json({message: "User profiled picture updated", user})
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({message: "Something went wrong"});
+    }
+})
 
 // Logout - GET
 router.get('/logout', (req, res) => {
