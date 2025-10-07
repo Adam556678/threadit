@@ -166,11 +166,27 @@ params:
 body:
     - title
     - body
+    - media
  */
-router.patch("/:communityId/:postId", auth, joined, async (req, res) => {
+router.patch("/:communityId/:postId", auth, joined, upload.array("media"), async (req, res) => {
     try {
         const {postId} = req.params
         const {title, body} = req.body
+
+        // handle uploaded media
+        const uploadedMedia = [];
+
+        for (file of req.files){
+            const result = await cloudinary.uploader.upload(
+                file.path,
+                {resource_type: file.mimetype.startsWith("video") ? "video" : "image"}
+            );
+
+            uploadedMedia.push({
+                url: result.secure_url,
+                type: file.mimetype.startsWith("video") ? "Video" : "Image"
+            });
+        }
     
         // get post document
         const post = await Post.findById(postId);
@@ -183,6 +199,7 @@ router.patch("/:communityId/:postId", auth, joined, async (req, res) => {
         // update post and save
         if (title) post.title = title;
         if (body) post.body = body;
+        if (uploadedMedia.length > 0) post.media = uploadedMedia
 
         await post.save()
         return res.status(200).json({message: "Post updated successfully"});
