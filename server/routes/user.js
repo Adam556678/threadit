@@ -161,6 +161,13 @@ body:
 */
 router.patch("/:userId/upload-pfp", auth, upload.single("profilPic"), async (req, res) => {
     try {
+        // check for current user id
+        if (req.params.userId != req.userId){
+            return res.status(403).json({
+                message: "You can only update your own profile picture"
+            });
+        }
+        
         const result = await cloudinary.uploader.upload(
             req.file.path, 
             {resource_type: "image"}
