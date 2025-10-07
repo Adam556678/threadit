@@ -8,6 +8,8 @@ const Post = require("../models/Post.js");
 const verifyCommunityOwner = require("../middlewares/verify_community_owner.js");
 const Comment = require("../models/Comment.js");
 const Vote = require("../models/Vote.js");
+const upload = require("../middlewares/upload.js");
+const cloudinary = require("../config/cloudinary.js");
 
 // Create community - POST
 router.post("/", auth, async(req, res) => {
@@ -57,19 +59,41 @@ router.get("/", auth, async(req, res) => {
 });
 
 
-// Add post to a specific community 
-router.post("/:communityId/add-post", auth, joined, async (req, res) => {
+/*
+Add post to a specific community - POST
+params:
+    - communityId
+body:
+    - media
+*/
+router.post("/:communityId/add-post", auth, joined, upload.array("media"), async (req, res) => {
     const {communityId} = req.params;
     const community = req.community;
     const {title, body} = req.body;
 
     try {
+        // handle uploaded media
+        const uploadedMedia = [];
+
+        for (file of req.files){
+            const result = await cloudinary.UploadStream.upload(
+                file.path,
+                {resource_type: file.mimetype.startsWith("video") ? "video" : "image"}
+            );
+
+            uploadedMedia.push({
+                url: result.secure_url,
+                type: file.mimetype.startsWith("video") ? "Video" : "Image"
+            });
+        }
+
         // Create post
         const post = await Post.create({
             title,
             body,
             author: req.userId,
-            community: communityId
+            community: communityId,
+            media: uploadedMedia
         });
 
         // Add post to the community

@@ -20,7 +20,7 @@ const PostSchema = new mongoose.Schema({
         url: { type: String },     
         type: { 
             type: String, 
-            enum: ["Image", "Video", "Link"]
+            enum: ["Image", "Video"]
         }
         }
     ],
