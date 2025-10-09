@@ -190,35 +190,43 @@ The following is a high-level overview of the available API routes. For detailed
 | `POST` | `/votes/vote`                     | Cast an upvote or downvote on a post or comment.    |      ✅        |
 
 ---
-
 ### Project Structure
+
+The project follows a standard and scalable structure for an Express.js application, separating concerns into distinct directories.
+
+```plaintext
 threadit/
 ├── server/
-│ ├── config/
-│ │ ├── cloudinary.js # Cloudinary configuration
-│ │ └── db.js # MongoDB connection logic
-│ ├── helpers/
-│ │ ├── hash.js # Password hashing functions
-│ │ ├── otp_verification.js # OTP generation and sending logic
-│ │ └── validators.js # Input validation functions
-│ ├── middlewares/
-│ │ ├── auth.js # JWT authentication middleware
-│ │ ├── joined.js # Verifies if a user is a community member
-│ │ ├── upload.js # Multer configuration for file uploads
-│ │ └── ...and others
-│ ├── models/
-│ │ ├── User.js
-│ │ ├── Community.js
-│ │ ├── Post.js
-│ │ ├── Comment.js
-│ │ ├── Vote.js
-│ │ └── UserOTP.js
-│ └── routes/
-│ ├── user.js
-│ ├── community.js
-│ ├── post.js
-│ └── vote.js
-├── app.js # Main Express application file
-├── package.json
-└── .env.example # Example environment variables
-
+│   ├── config/
+│   │   ├── cloudinary.js       # Cloudinary configuration for media uploads
+│   │   └── db.js               # MongoDB database connection logic
+│   │
+│   ├── helpers/
+│   │   ├── hash.js             # Password hashing and comparison functions
+│   │   ├── otp_verification.js # OTP generation and email sending logic
+│   │   └── validators.js       # Helper functions for input validation
+│   │
+│   ├── middlewares/
+│   │   ├── auth.js             # JWT authentication middleware to protect routes
+│   │   ├── joined.js           # Verifies if a user is a member of a community
+│   │   ├── upload.js           # Multer configuration for handling file uploads
+│   │   └── ...and other custom middlewares
+│   │
+│   ├── models/
+│   │   ├── User.js             # User schema and model
+│   │   ├── Community.js        # Community schema and model
+│   │   ├── Post.js             # Post schema and model
+│   │   ├── Comment.js          # Comment schema and model
+│   │   ├── Vote.js             # Vote schema and model
+│   │   └── UserOTP.js          # Schema for storing user OTPs for verification
+│   │
+│   └── routes/
+│       ├── user.js             # Routes for user authentication and management
+│       ├── community.js        # Routes for community and post management
+│       ├── post.js             # Routes for comments and post details
+│       └── vote.js             # Routes for the voting system
+│
+├── app.js                      # Main Express application file (entry point)
+├── package.json                # Project dependencies and scripts
+└── .env                        # Environment variables (ignored by git)
+```
