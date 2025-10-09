@@ -6,7 +6,36 @@ const postMiddleware = require("../middlewares/member_post.js");
 const Comment = require("../models/Comment.js");
 const Vote = require("../models/Vote.js");
 
-// Get post content - GET
+/**
+ * @swagger
+ * tags:
+ *   name: Posts
+ *   description: API endpoints for managing posts and comments
+ */
+
+/**
+ * @swagger
+ * /posts/{postId}:
+ *   get:
+ *     summary: Get a specific post's content
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved post
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Something went wrong
+ */
 router.get("/:postId", auth, postMiddleware, async (req, res) => {
     try {
         const post = req.post;
@@ -16,7 +45,29 @@ router.get("/:postId", auth, postMiddleware, async (req, res) => {
     }
 });
 
-// Get post's comments - GET
+/**
+ * @swagger
+ * /posts/{postId}/comments:
+ *   get:
+ *     summary: Get all comments for a specific post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved comments
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Something went wrong
+ */
 router.get("/:postId/comments", auth, postMiddleware, async (req, res) => {
     try {
         const comments = await req.post.comments.find();
@@ -27,13 +78,39 @@ router.get("/:postId/comments", auth, postMiddleware, async (req, res) => {
     }
 });
 
-/*
-Add comment route - POST
-params
-    - postId
-body:
-    - text
-*/
+/**
+ * @swagger
+ * /posts/{postId}/add-comment:
+ *   post:
+ *     summary: Add a comment to a specific post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               text:
+ *                 type: string
+ *                 example: "This post is amazing!"
+ *     responses:
+ *       200:
+ *         description: Comment added successfully
+ *       400:
+ *         description: Invalid request
+ *       500:
+ *         description: Something went wrong
+ */
 router.post("/:postId/add-comment", auth, postMiddleware, async (req, res) => {
     try {
         const {postId} = req.params;
@@ -56,14 +133,49 @@ router.post("/:postId/add-comment", auth, postMiddleware, async (req, res) => {
     
 });
 
-/*
-Update comment - PATCH
-params:
-    - postId
-    - commentId
-body:
-    - text
-*/
+/**
+ * @swagger
+ * /posts/{postId}/{commentId}:
+ *   patch:
+ *     summary: Update a comment on a post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the comment to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               text:
+ *                 type: string
+ *                 example: "Edited comment text"
+ *     responses:
+ *       200:
+ *         description: Comment updated successfully
+ *       400:
+ *         description: Comment text is required
+ *       403:
+ *         description: Not authorized to edit this comment
+ *       404:
+ *         description: Comment not found
+ *       500:
+ *         description: Something went wrong
+ */
 router.patch("/:postId/:commentId", auth, postMiddleware, async (req, res) => {
     try {
         const {commentId} = req.params;
@@ -95,13 +207,37 @@ router.patch("/:postId/:commentId", auth, postMiddleware, async (req, res) => {
     }
 });
 
-/*
-Delete comment - DELETE
-params:
-- postId
-- commentId
-body:
-*/
+/**
+ * @swagger
+ * /posts/{postId}/{commentId}:
+ *   delete:
+ *     summary: Delete a comment from a post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the post
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the comment to delete
+ *     responses:
+ *       200:
+ *         description: Comment deleted successfully
+ *       403:
+ *         description: Not authorized to delete this comment
+ *       404:
+ *         description: Comment not found
+ *       500:
+ *         description: Something went wrong
+ */
 router.delete("/:postId/:commentId", auth, postMiddleware, async (req, res) => {
     try {
         const {commentId} = req.params;

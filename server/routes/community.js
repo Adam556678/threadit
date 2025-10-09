@@ -11,7 +11,43 @@ const Vote = require("../models/Vote.js");
 const upload = require("../middlewares/upload.js");
 const cloudinary = require("../config/cloudinary.js").v2;
 
-// Create community - POST
+/**
+ * @swagger
+ * tags:
+ *   name: Communities
+ *   description: API endpoints for managing communities and community posts
+ */
+
+/**
+ * @swagger
+ * /communities:
+ *   post:
+ *     summary: Create a new community
+ *     tags: [Communities]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               access:
+ *                 type: string
+ *                 enum: [Public, Private]
+ *     responses:
+ *       201:
+ *         description: Community created successfully
+ *       400:
+ *         description: Community name already exists
+ *       500:
+ *         description: Something went wrong
+ */
 router.post("/", auth, async(req, res) => {
     const {name, description, access} = req.body;
 
@@ -47,7 +83,20 @@ router.post("/", auth, async(req, res) => {
     }
 });
 
-// get all communities
+/**
+ * @swagger
+ * /communities:
+ *   get:
+ *     summary: Get all communities
+ *     tags: [Communities]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved communities
+ *       500:
+ *         description: Something went wrong
+ */
 router.get("/", auth, async(req, res) => {
     try {
         const communities = await Community.find();
@@ -59,13 +108,43 @@ router.get("/", auth, async(req, res) => {
 });
 
 
-/*
-Add post to a specific community - POST
-params:
-    - communityId
-body:
-    - media
-*/
+/**
+ * @swagger
+ * /communities/{communityId}/add-post:
+ *   post:
+ *     summary: Add a post to a community
+ *     tags: [Communities]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: communityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the community
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               body:
+ *                 type: string
+ *               media:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Post created successfully
+ *       500:
+ *         description: Something went wrong
+ */
 router.post("/:communityId/add-post", auth, joined, upload.array("media"), async (req, res) => {
     const {communityId} = req.params;
     const community = req.community;
@@ -108,7 +187,27 @@ router.post("/:communityId/add-post", auth, joined, upload.array("media"), async
 
 });
 
-// get community posts - GET
+/**
+ * @swagger
+ * /communities/{communityId}/posts:
+ *   get:
+ *     summary: Get all posts in a community
+ *     tags: [Communities]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: communityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the community
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved posts
+ *       500:
+ *         description: Something went wrong
+ */
 router.get("/:communityId/posts", auth, joined, async (req, res) => {
     try {
         const posts = await Post.find({community: req.community._id});
@@ -118,7 +217,29 @@ router.get("/:communityId/posts", auth, joined, async (req, res) => {
     }
 });
 
-// join community - POST
+/**
+ * @swagger
+ * /communities/{communityId}/join:
+ *   post:
+ *     summary: Join a community (public or private)
+ *     tags: [Communities]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: communityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the community to join
+ *     responses:
+ *       200:
+ *         description: Joined community or join request sent
+ *       400:
+ *         description: Already joined
+ *       500:
+ *         description: Something went wrong
+ */
 router.post("/:communityId/join", auth, async (req, res) => {
     try {
        
@@ -159,14 +280,50 @@ router.post("/:communityId/join", auth, async (req, res) => {
 
 });
 
-/* 
-Update post - PATCH
-params:
-    - postId
-body:
-    - title
-    - body
-    - media
+/**
+ * @swagger
+ * /communities/{communityId}/{postId}:
+ *   patch:
+ *     summary: Update a post in a community
+ *     tags: [Communities]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: communityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               body:
+ *                 type: string
+ *               media:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       200:
+ *         description: Post updated successfully
+ *       403:
+ *         description: Not authorized to edit this post
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Something went wrong
  */
 router.patch("/:communityId/:postId", auth, joined, upload.array("media"), async (req, res) => {
     try {
@@ -210,11 +367,34 @@ router.patch("/:communityId/:postId", auth, joined, upload.array("media"), async
 
 });
 
-/* 
-Delete post - DELETE
-params:
-    - postId
-body:
+/**
+ * @swagger
+ * /communities/{communityId}/{postId}:
+ *   delete:
+ *     summary: Delete a post from a community
+ *     tags: [Communities]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: communityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Post deleted successfully
+ *       403:
+ *         description: Not authorized to delete this post
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Something went wrong
  */
 router.delete("/:communityId/:postId", auth, joined, async (req, res) => {
     try {
@@ -251,12 +431,29 @@ router.delete("/:communityId/:postId", auth, joined, async (req, res) => {
 
 });
 
-/*
-Delete community - DELETE
-params:
-    - communityId
-body:
-*/
+/**
+ * @swagger
+ * /communities/{communityId}:
+ *   delete:
+ *     summary: Delete a community (owner only)
+ *     tags: [Communities]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: communityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the community
+ *     responses:
+ *       200:
+ *         description: Community deleted successfully
+ *       403:
+ *         description: Not authorized (not owner)
+ *       500:
+ *         description: Something went wrong
+ */
 router.delete("/:communityId", auth, verifyCommunityOwner, async (req, res) => {
     try {
         const community = req.community;

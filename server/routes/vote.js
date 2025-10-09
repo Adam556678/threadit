@@ -7,15 +7,84 @@ const Post = require("../models/Post.js");
 const Comment = require("../models/Comment.js");
 const User = require("../models/User.js");
 
+/**
+ * @swagger
+ * tags:
+ *   name: Votes
+ *   description: API endpoints for managing post's and comment's votes
+ */
 
-/*
-record a vote - POST
-params: 
-body:
-    - targetId
-    - targetType
-    - voteType
-*/
+
+
+/**
+ * @swagger
+ * /votes/vote:
+ *   post:
+ *     summary: Record a vote (upvote or downvote) on a Post or Comment
+ *     description: |
+ *       Allows an authenticated community member to vote on a post or comment.  
+ *       - If the user hasn’t voted before → creates a new vote.  
+ *       - If the user presses the same vote again → removes their vote.  
+ *       - If the user switches from up to down (or vice versa) → updates their vote.
+ *     tags: [Votes]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - targetId
+ *               - targetType
+ *               - voteType
+ *             properties:
+ *               targetId:
+ *                 type: string
+ *                 description: The ID of the post or comment being voted on.
+ *                 example: "64fa0b23b6f73a0012b9c1de"
+ *               targetType:
+ *                 type: string
+ *                 description: The type of the target (either Post or Comment).
+ *                 enum: [Post, Comment]
+ *                 example: "Post"
+ *               voteType:
+ *                 type: string
+ *                 description: The type of the vote (up or down).
+ *                 enum: [up, down]
+ *                 example: "up"
+ *     responses:
+ *       200:
+ *         description: Vote recorded or removed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Vote recorded"
+ *       400:
+ *         description: Invalid voting type.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid voting type"
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *       403:
+ *         description: Forbidden (user is not a member of the community)
+ *       404:
+ *         description: Post or Comment not found.
+ *       500:
+ *         description: Server error.
+ */
+
 router.post("/vote", auth, verifyCommunityMember, async (req, res) => {
     try {
         const {targetId, targetType, voteType} = req.body;
